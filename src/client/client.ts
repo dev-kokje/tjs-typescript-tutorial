@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import { GUI } from 'dat.gui'
 import { BoxGeometry } from 'three'
@@ -78,53 +79,68 @@ controls.keys = {
 const material = new THREE.MeshNormalMaterial()
 
 // Add Cube obj from blender
-const objLoader = new OBJLoader()
-objLoader.load(
-    'models/cube.obj',
-    (object) => {
-        //(object.children[0] as THREE.Mesh).material = material
+// const objLoader = new OBJLoader()
+// objLoader.load(
+//     'models/cube.obj',
+//     (object) => {
+//         //(object.children[0] as THREE.Mesh).material = material
 
-        object.position.x = 3
+//         object.position.x = 3
 
-        object.traverse(function (child) {
-            if((child as THREE.Mesh).isMesh) {
-                (child as THREE.Mesh).material = material
-            }
-        })
+//         object.traverse(function (child) {
+//             if((child as THREE.Mesh).isMesh) {
+//                 (child as THREE.Mesh).material = material
+//             }
+//         })
 
-        scene.add(object)
-    }, 
-    (xhr) => {
-        console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-    },
-    (error) => {
-        console.log(error)
-    }
-)
+//         scene.add(object)
+//     }, 
+//     (xhr) => {
+//         console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+//     },
+//     (error) => {
+//         console.log(error)
+//     }
+// )
 
 // Import susane
-const mtlLoader = new MTLLoader()
-mtlLoader.load(
-    'models/susane.mtl',
-    (materials) => {
-        materials.preload()
-        console.log(materials)
+// const mtlLoader = new MTLLoader()
+// mtlLoader.load(
+//     'models/susane.mtl',
+//     (materials) => {
+//         materials.preload()
+//         console.log(materials)
 
-        const objLoader2 = new OBJLoader()
-        objLoader2.setMaterials(materials)
+//         const objLoader2 = new OBJLoader()
+//         objLoader2.setMaterials(materials)
 
-        objLoader2.load(
-            'models/susane.obj',
-            (object) => {
-                scene.add(object)
-            }, 
-            (xhr) => {
-                console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-            },
-            (error) => {
-                console.log(error)
-            }
-        )
+//         objLoader2.load(
+//             'models/susane.obj',
+//             (object) => {
+//                 scene.add(object)
+//             }, 
+//             (xhr) => {
+//                 console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+//             },
+//             (error) => {
+//                 console.log(error)
+//             }
+//         )
+//     },
+//     (xhr) => {
+//         console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+//     },
+//     (error) => {
+//         console.log(error)
+//     }
+// )
+
+// Import Susane as gLTF
+const gltfLoader = new GLTFLoader()
+gltfLoader.load(
+    'models/susane.glb',
+    (object) => {
+        scene.add(object.scene)
     },
     (xhr) => {
         console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
