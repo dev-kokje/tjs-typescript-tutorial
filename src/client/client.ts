@@ -23,6 +23,34 @@ document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
+// camera.lookAt(0.5, 0.5, 0.5)
+// controls.target.set(0.5, 0.5, 0.5)
+// controls.update()
+
+// controls.autoRotate = true
+// controls.autoRotateSpeed = 5
+
+// controls.enableDamping = true
+// controls.dampingFactor = 0.01
+
+// Enable keyboard controls
+controls.listenToKeyEvents(document.body)
+controls.keys = {
+    LEFT: "KeyA",
+    UP: "KeyW",
+    RIGHT: "KeyD",
+    BOTTOM: "KeyS"
+}
+
+// controls.screenSpacePanning = false // - Right click and moving up and down zooms in and out the object
+
+// Control rotating angles
+// controls.minAzimuthAngle = 0
+// controls.maxAzimuthAngle = Math.PI/2
+
+// Control zoom distance
+// controls.minZoom = 1
+// controls.maxZoom = 6
 
 const geometry = new THREE.BoxGeometry()
 const material = new THREE.MeshBasicMaterial({
@@ -106,6 +134,8 @@ console.log(scene)
 
 function animate() {
     requestAnimationFrame(animate)
+
+    controls.update()
 
     render()
     stats.update()
