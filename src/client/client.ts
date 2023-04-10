@@ -2,12 +2,9 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import { GUI } from 'dat.gui'
-import { BoxGeometry } from 'three'
 
 const scene = new THREE.Scene()
 scene.add(new THREE.AxesHelper(5))
-
-scene.background = new THREE.Color(0x333333)
 
 const camera = new THREE.PerspectiveCamera(
     75,
@@ -15,99 +12,88 @@ const camera = new THREE.PerspectiveCamera(
     0.1,
     1000
 )
-camera.position.z = 2
+camera.position.z = 3
 
 const renderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-const controls = new OrbitControls(camera, renderer.domElement)
+new OrbitControls(camera, renderer.domElement)
 
+const boxGeometry = new THREE.BoxGeometry()
+const sphereGeometry = new THREE.SphereGeometry()
+const icosahedronGeometry = new THREE.IcosahedronGeometry(1, 0)
+const planeGeometry = new THREE.PlaneGeometry()
+const torusKnotGeometry = new THREE.TorusKnotGeometry()
 
-const geometry = new THREE.BoxGeometry()
-const material = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    wireframe: true,
-})
+/*const material = new THREE.MeshBasicMaterial({
+    color: 0x00ff00
+})*/
+const material= new THREE.MeshNormalMaterial()
 
-const cube = new THREE.Mesh(geometry, material)
+const cube = new THREE.Mesh(boxGeometry, material)
+cube.position.x = 5
 scene.add(cube)
 
-const cubeData = {
-    width: 1,
-    height: 1,
-    depth: 1,
-    widthSegments: 1,
-    heightSegments: 1,
-    depthSegments: 1
-}
+const sphere = new THREE.Mesh(sphereGeometry, material)
+sphere.position.x = 3
+scene.add(sphere)
 
-function regenerateGeometry() {
-    const newGeometry = new THREE.BoxGeometry(
-        cubeData.width,
-        cubeData.height,
-        cubeData.depth,
-        cubeData.widthSegments,
-        cubeData.heightSegments,
-        cubeData.depthSegments
-    )
-    cube.geometry.dispose()
-    cube.geometry = newGeometry
-}
+const icosahedron = new THREE.Mesh(icosahedronGeometry, material)
+icosahedron.position.x = 0
+scene.add(icosahedron)
+
+const plane = new THREE.Mesh(planeGeometry, material)
+plane.position.x = -2
+scene.add(plane)
+
+const torusKnot = new THREE.Mesh(torusKnotGeometry, material)
+torusKnot.position.x = -5
+scene.add(torusKnot)
 
 window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
     renderer.setSize(window.innerWidth, window.innerHeight)
+    render()
 }
 
 const stats = new Stats()
 document.body.appendChild(stats.dom)
 
+const options = {
+     side: {
+         "FrontSide": THREE.FrontSide,
+         "BackSide": THREE.BackSide,
+         "DoubleSide": THREE.DoubleSide,
+     }
+}
+
 const gui = new GUI()
+const materialFolder = gui.addFolder('THREE.Material')
+materialFolder.add(material, 'transparent').onChange(() => material.needsUpdate = true)
+materialFolder.add(material, 'opacity', 0, 1, 0.01)
 
-const cubeFolder = gui.addFolder("Cube")
+materialFolder.add(material, 'depthTest')
+materialFolder.add(material, 'depthWrite')
 
-const cubeRotationFolder = cubeFolder.addFolder("Rotation")
-cubeRotationFolder.add(cube.rotation, "x", 0, 2 * Math.PI)
-cubeRotationFolder.add(cube.rotation, "y", 0, 2 * Math.PI)
-cubeRotationFolder.add(cube.rotation, "z", 0, 2 * Math.PI)
-cubeRotationFolder.open()
+//Displays object only if the opacity of the object is less than tha alphaTest threshold
+materialFolder.add(material, 'alphaTest', 0, 1, 0.01).onChange(() => updateMaterial())
+materialFolder.add(material, 'visible')
+materialFolder.add(material, 'side', options.side).onChange(() => updateMaterial())
+materialFolder.open()
 
-const cubePositionFolder = cubeFolder.addFolder("Position")
-cubePositionFolder.add(cube.position, "x", -10, 10)
-cubePositionFolder.add(cube.position, "y", -10, 10)
-cubePositionFolder.add(cube.position, "z", -10, 10)
-cubePositionFolder.open()
-
-const cubeScaleFolder = cubeFolder.addFolder("Scale")
-cubeScaleFolder.add(cube.scale, "x", 0, 5)
-cubeScaleFolder.add(cube.scale, "y", 0, 5)
-cubeScaleFolder.add(cube.scale, "z", 0, 5)
-cubeScaleFolder.open()
-
-cubeFolder.add(cube, "visible")
-
-const cubePropertiesFolder = cubeFolder.addFolder("Properties")
-cubePropertiesFolder
-        .add(cubeData, 'width', 1, 30)
-        .onChange(regenerateGeometry)
-        .onFinishChange(() => console.dir(cube.geometry))
-cubePropertiesFolder.add(cubeData, 'height', 1, 30).onChange(regenerateGeometry)
-cubePropertiesFolder.add(cubeData, 'depth', 1, 30).onChange(regenerateGeometry)
-cubePropertiesFolder.add(cubeData, 'widthSegments', 1, 30).onChange(regenerateGeometry)
-cubePropertiesFolder.add(cubeData, 'heightSegments', 1, 30).onChange(regenerateGeometry)
-cubePropertiesFolder.add(cubeData, 'depthSegments', 1, 30).onChange(regenerateGeometry)
-
-cubeFolder.open()
-
-console.log(scene)
+function updateMaterial() {
+     material.side = Number(material.side) as THREE.Side
+     material.needsUpdate = true
+}
 
 function animate() {
     requestAnimationFrame(animate)
 
     render()
+
     stats.update()
 }
 
