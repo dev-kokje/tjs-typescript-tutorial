@@ -1,13 +1,9 @@
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
-import { GUI } from 'dat.gui'
-import { BoxGeometry } from 'three'
 
 const scene = new THREE.Scene()
 scene.add(new THREE.AxesHelper(5))
-
-scene.background = new THREE.Color(0x333333)
 
 const camera = new THREE.PerspectiveCamera(
     75,
@@ -15,129 +11,106 @@ const camera = new THREE.PerspectiveCamera(
     0.1,
     1000
 )
+camera.position.y = 1
 camera.position.z = 2
 
 const renderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-const controls = new OrbitControls(camera, renderer.domElement)
+const menuPanel = document.getElementById('menuPanel') as HTMLDivElement
+const startButton = document.getElementById('startButton') as HTMLInputElement
+startButton.addEventListener(
+    'click',
+    function () {
+        controls.lock()
+    },
+    false
+)
 
-// camera.lookAt(0.5, 0.5, 0.5)
-// controls.target.set(0.5, 0.5, 0.5)
-// controls.update()
+const controls = new PointerLockControls(camera, renderer.domElement)
+// controls.addEventListener('change', () => console.log("Controls Change"))
+controls.addEventListener('lock', () => menuPanel.style.display = 'none')
+controls.addEventListener('unlock', () => menuPanel.style.display = 'block')
 
-// controls.autoRotate = true
-// controls.autoRotateSpeed = 5
-
-// controls.enableDamping = true
-// controls.dampingFactor = 0.01
-
-// Enable keyboard controls
-controls.listenToKeyEvents(document.body)
-controls.keys = {
-    LEFT: "KeyA",
-    UP: "KeyW",
-    RIGHT: "KeyD",
-    BOTTOM: "KeyS"
-}
-
-// controls.screenSpacePanning = false // - Right click and moving up and down zooms in and out the object
-
-// Control rotating angles
-// controls.minAzimuthAngle = 0
-// controls.maxAzimuthAngle = Math.PI/2
-
-// Control zoom distance
-// controls.minZoom = 1
-// controls.maxZoom = 6
-
-const geometry = new THREE.BoxGeometry()
+const planeGeometry = new THREE.PlaneGeometry(100, 100, 50, 50)
 const material = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
+    color: 0x00ff00,
     wireframe: true,
 })
+const plane = new THREE.Mesh(planeGeometry, material)
+plane.rotateX(-Math.PI / 2)
+scene.add(plane)
 
-const cube = new THREE.Mesh(geometry, material)
-scene.add(cube)
-
-const cubeData = {
-    width: 1,
-    height: 1,
-    depth: 1,
-    widthSegments: 1,
-    heightSegments: 1,
-    depthSegments: 1
-}
-
-function regenerateGeometry() {
-    const newGeometry = new THREE.BoxGeometry(
-        cubeData.width,
-        cubeData.height,
-        cubeData.depth,
-        cubeData.widthSegments,
-        cubeData.heightSegments,
-        cubeData.depthSegments
+const cubes: THREE.Mesh[] = []
+for (let i = 0; i < 100; i++) {
+    const geo = new THREE.BoxGeometry(
+        Math.random() * 4,
+        Math.random() * 16,
+        Math.random() * 4
     )
-    cube.geometry.dispose()
-    cube.geometry = newGeometry
+    const mat = new THREE.MeshBasicMaterial({ wireframe: true })
+    switch (i % 3) {
+        case 0:
+            mat.color = new THREE.Color(0xff0000)
+            break
+        case 1:
+            mat.color = new THREE.Color(0xffff00)
+            break
+        case 2:
+            mat.color = new THREE.Color(0x0000ff)
+            break
+    }
+    const cube = new THREE.Mesh(geo, mat)
+    cubes.push(cube)
 }
+cubes.forEach((c) => {
+    c.position.x = Math.random() * 100 - 50
+    c.position.z = Math.random() * 100 - 50
+    c.geometry.computeBoundingBox()
+    c.position.y =
+        ((c.geometry.boundingBox as THREE.Box3).max.y -
+            (c.geometry.boundingBox as THREE.Box3).min.y) /
+        2
+    scene.add(c)
+})
+
+const onKeyDown = function (event: KeyboardEvent) {
+    switch (event.code) {
+        case "KeyW":
+            controls.moveForward(.25)
+            break
+        case "KeyA":
+            controls.moveRight(-.25)
+            break
+        case "KeyS":
+            controls.moveForward(-.25)
+            break
+        case "KeyD":
+            controls.moveRight(.25)
+            break
+    }
+}
+document.addEventListener('keydown', onKeyDown, false)
 
 window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
     renderer.setSize(window.innerWidth, window.innerHeight)
+    render()
 }
 
 const stats = new Stats()
 document.body.appendChild(stats.dom)
 
-const gui = new GUI()
-
-const cubeFolder = gui.addFolder("Cube")
-
-const cubeRotationFolder = cubeFolder.addFolder("Rotation")
-cubeRotationFolder.add(cube.rotation, "x", 0, 2 * Math.PI)
-cubeRotationFolder.add(cube.rotation, "y", 0, 2 * Math.PI)
-cubeRotationFolder.add(cube.rotation, "z", 0, 2 * Math.PI)
-cubeRotationFolder.open()
-
-const cubePositionFolder = cubeFolder.addFolder("Position")
-cubePositionFolder.add(cube.position, "x", -10, 10)
-cubePositionFolder.add(cube.position, "y", -10, 10)
-cubePositionFolder.add(cube.position, "z", -10, 10)
-cubePositionFolder.open()
-
-const cubeScaleFolder = cubeFolder.addFolder("Scale")
-cubeScaleFolder.add(cube.scale, "x", 0, 5)
-cubeScaleFolder.add(cube.scale, "y", 0, 5)
-cubeScaleFolder.add(cube.scale, "z", 0, 5)
-cubeScaleFolder.open()
-
-cubeFolder.add(cube, "visible")
-
-const cubePropertiesFolder = cubeFolder.addFolder("Properties")
-cubePropertiesFolder
-        .add(cubeData, 'width', 1, 30)
-        .onChange(regenerateGeometry)
-        .onFinishChange(() => console.dir(cube.geometry))
-cubePropertiesFolder.add(cubeData, 'height', 1, 30).onChange(regenerateGeometry)
-cubePropertiesFolder.add(cubeData, 'depth', 1, 30).onChange(regenerateGeometry)
-cubePropertiesFolder.add(cubeData, 'widthSegments', 1, 30).onChange(regenerateGeometry)
-cubePropertiesFolder.add(cubeData, 'heightSegments', 1, 30).onChange(regenerateGeometry)
-cubePropertiesFolder.add(cubeData, 'depthSegments', 1, 30).onChange(regenerateGeometry)
-
-cubeFolder.open()
-
-console.log(scene)
-
 function animate() {
     requestAnimationFrame(animate)
 
-    controls.update()
+    //controls.update()
 
     render()
+
     stats.update()
 }
 
