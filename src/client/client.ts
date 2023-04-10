@@ -2,9 +2,12 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import { GUI } from 'dat.gui'
+import { BoxGeometry } from 'three'
 
 const scene = new THREE.Scene()
 scene.add(new THREE.AxesHelper(5))
+
+scene.background = new THREE.Color(0x333333)
 
 const camera = new THREE.PerspectiveCamera(
     75,
@@ -20,6 +23,7 @@ document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
+
 const geometry = new THREE.BoxGeometry()
 const material = new THREE.MeshBasicMaterial({
     color: 0xffffff,
@@ -28,6 +32,28 @@ const material = new THREE.MeshBasicMaterial({
 
 const cube = new THREE.Mesh(geometry, material)
 scene.add(cube)
+
+const cubeData = {
+    width: 1,
+    height: 1,
+    depth: 1,
+    widthSegments: 1,
+    heightSegments: 1,
+    depthSegments: 1
+}
+
+function regenerateGeometry() {
+    const newGeometry = new THREE.BoxGeometry(
+        cubeData.width,
+        cubeData.height,
+        cubeData.depth,
+        cubeData.widthSegments,
+        cubeData.heightSegments,
+        cubeData.depthSegments
+    )
+    cube.geometry.dispose()
+    cube.geometry = newGeometry
+}
 
 window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
@@ -63,8 +89,20 @@ cubeScaleFolder.open()
 
 cubeFolder.add(cube, "visible")
 
+const cubePropertiesFolder = cubeFolder.addFolder("Properties")
+cubePropertiesFolder
+        .add(cubeData, 'width', 1, 30)
+        .onChange(regenerateGeometry)
+        .onFinishChange(() => console.dir(cube.geometry))
+cubePropertiesFolder.add(cubeData, 'height', 1, 30).onChange(regenerateGeometry)
+cubePropertiesFolder.add(cubeData, 'depth', 1, 30).onChange(regenerateGeometry)
+cubePropertiesFolder.add(cubeData, 'widthSegments', 1, 30).onChange(regenerateGeometry)
+cubePropertiesFolder.add(cubeData, 'heightSegments', 1, 30).onChange(regenerateGeometry)
+cubePropertiesFolder.add(cubeData, 'depthSegments', 1, 30).onChange(regenerateGeometry)
 
 cubeFolder.open()
+
+console.log(scene)
 
 function animate() {
     requestAnimationFrame(animate)
