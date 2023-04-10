@@ -1,14 +1,26 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import { GUI } from 'dat.gui'
 import { BoxGeometry } from 'three'
 
+// Setup Scene
 const scene = new THREE.Scene()
 scene.add(new THREE.AxesHelper(5))
-
 scene.background = new THREE.Color(0x333333)
 
+const backGroundTexture = new THREE.CubeTextureLoader().load([
+    'img/px_eso0932a.jpg',
+    'img/nx_eso0932a.jpg',
+    'img/py_eso0932a.jpg',
+    'img/ny_eso0932a.jpg',
+    'img/pz_eso0932a.jpg',
+    'img/nz_eso0932a.jpg',
+])
+scene.background = backGroundTexture
+
+// Setup Camera
 const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -17,10 +29,13 @@ const camera = new THREE.PerspectiveCamera(
 )
 camera.position.z = 2
 
+// Setup Renderer 
 const renderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
+
+// Add orbital Controls
 const controls = new OrbitControls(camera, renderer.domElement)
 
 // camera.lookAt(0.5, 0.5, 0.5)
@@ -52,12 +67,9 @@ controls.keys = {
 // controls.minZoom = 1
 // controls.maxZoom = 6
 
+// Create a cube object
 const geometry = new THREE.BoxGeometry()
-const material = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    wireframe: true,
-})
-
+const material = new THREE.MeshNormalMaterial({ transparent: true })
 const cube = new THREE.Mesh(geometry, material)
 scene.add(cube)
 
@@ -83,6 +95,18 @@ function regenerateGeometry() {
     cube.geometry = newGeometry
 }
 
+// Add drag controls for the cube
+const dragControls = new DragControls([ cube ], camera, renderer.domElement)
+dragControls.addEventListener('dragstart', function (event) {
+    controls.enabled = false
+    event.object.material.opacity = 0.4
+})
+dragControls.addEventListener('dragend', function (event) {
+    controls.enabled = true
+    event.object.material.opacity = 1
+})
+
+// Add window resize function for responsiveness
 window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
@@ -90,9 +114,11 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
+// Add stats to check screen FPS
 const stats = new Stats()
 document.body.appendChild(stats.dom)
 
+// Add dat.GUI controls
 const gui = new GUI()
 
 const cubeFolder = gui.addFolder("Cube")
@@ -130,8 +156,7 @@ cubePropertiesFolder.add(cubeData, 'depthSegments', 1, 30).onChange(regenerateGe
 
 cubeFolder.open()
 
-console.log(scene)
-
+// Create animate function to refresh screen
 function animate() {
     requestAnimationFrame(animate)
 
